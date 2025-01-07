@@ -76,6 +76,7 @@ class _DockState<T extends Object> extends State<Dock<T>>
         color: Colors.black12,
       ),
       padding: const EdgeInsets.all(4),
+      //Reorderable Wrap widget for Draggable feature
       child: ReorderableWrap(
         scrollDirection: Axis.horizontal,
         spacing: 4.0,
@@ -87,12 +88,14 @@ class _DockState<T extends Object> extends State<Dock<T>>
             _items.insert(newIndex, item);
           });
         },
+        // When widget is dragging
         buildDraggableFeedback: (context, constraints, child) {
           return Material(
             color: Colors.transparent,
             child: child,
           );
         },
+        /// Generated List
         children: List.generate(_items.length, (index) {
           return AnimatedContainer(
             key: ValueKey(_items[index]),
