@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reorderables/reorderables.dart';
 
 /// Entrypoint of the application.
 void main() {
@@ -59,7 +60,6 @@ class Dock<T extends Object> extends StatefulWidget {
   State<Dock<T>> createState() => _DockState<T>();
 }
 
-/// State of the [Dock] used to manipulate the [_items].
 class _DockState<T extends Object> extends State<Dock<T>>
     with SingleTickerProviderStateMixin {
   /// [T] items being manipulated.
@@ -76,55 +76,36 @@ class _DockState<T extends Object> extends State<Dock<T>>
         color: Colors.black12,
       ),
       padding: const EdgeInsets.all(4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: _items.map((item) {
-          return LongPressDraggable<T>(
-            data: item,
-            onDragStarted: () {
-              setState(() {
-                _draggingItem = item;
-              });
-            },
-            onDragEnd: (_) {
-              setState(() {
-                _draggingItem = null;
-              });
-            },
-            feedback: AnimatedBuilder(
-              animation: AlwaysStoppedAnimation<double>(1.0),
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: 1.2, // Slight zoom effect during drag
-                  child: Material(
-                    color: Colors.transparent,
-                    child: widget.builder(item),
-                  ),
-                );
-              },
-            ),
-            childWhenDragging: Opacity(
-              opacity: 0.5,
-              child: widget.builder(item),
-            ),
-            child: DragTarget<T>(
-              onWillAccept: (data) => data != item,
-              onAccept: (data) {
-                setState(() {
-                  final oldIndex = _items.indexOf(data);
-                  final newIndex = _items.indexOf(item);
-
-                  _items.removeAt(oldIndex);
-                  _items.insert(newIndex, data);
-                });
-              },
-              builder: (context, candidateData, rejectedData) {
-                return widget.builder(item);
-              },
-            ),
+      child: ReorderableWrap(
+        scrollDirection: Axis.horizontal,
+        spacing: 4.0,
+        needsLongPressDraggable: false,
+        runSpacing: 4.0,
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            final item = _items.removeAt(oldIndex);
+            _items.insert(newIndex, item);
+          });
+        },
+        buildDraggableFeedback: (context, constraints, child) {
+          return Material(
+            color: Colors.transparent,
+            child: child,
           );
-        }).toList(),
+        },
+        children: List.generate(_items.length, (index) {
+          return AnimatedContainer(
+            key: ValueKey(_items[index]),
+            transform:  Matrix4.identity()..scale(1.05),
+            duration: const Duration(milliseconds: 300),  // Animation duration
+            curve: Curves.bounceInOut,
+            child: widget.builder(_items[index])
+          );
+        }),
       ),
+
     );
   }
 }
+
+
